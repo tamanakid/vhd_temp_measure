@@ -36,7 +36,7 @@ architecture rtl of temp_conversion is
   
   -- Two's complement signals for all units
   signal temp_celsius_2c        : std_logic_vector(8 downto 0);
-  signal temp_fahrenheit_term1  : std_logic_vector(9 downto 0);
+  signal temp_fahrenheit_term1  : std_logic_vector(13 downto 0);
   signal temp_fahrenheit_2c     : std_logic_vector(9 downto 0);
   signal temp_kelvin_2c         : std_logic_vector(9 downto 0);
   
@@ -88,10 +88,10 @@ begin
   -- Conversion to fahrenheit
   -- 1.8125 multiplication: (2 - 0.25 + 0.0625)*celsius
   -- temp_fahrenheit_term1 <= (temp_celsius_bin & "0") - ("000" & temp_celsius_bin(7 downto 2)) + ("00000" & temp_celsius_bin(7 downto 4));
-  temp_fahrenheit_term1 <= (temp_celsius_2c & "0") - (temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8 downto 2)) +
-                           (temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8 downto 4));
+  temp_fahrenheit_term1 <= (temp_celsius_2c & "00000") - (temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8 downto 0) & "00") +
+                           (temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8) & temp_celsius_2c(8 downto 0));
   
-  temp_fahrenheit_2c <= temp_fahrenheit_term1 + SUM_FAHRENHEIT;
+  temp_fahrenheit_2c <= temp_fahrenheit_term1(13 downto 4) + SUM_FAHRENHEIT;
   
   
   
