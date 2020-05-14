@@ -1,7 +1,12 @@
+-- temp_conversion.vhd
+-- Converts Celsius temperature in two's complement and converts it to binary in either celsius, fahrenheit or kelvin
+
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_signed.all;
+
+use work.pack_temp_conv.all;
 
 
 entity temp_conversion is
@@ -13,12 +18,12 @@ entity temp_conversion is
     -- input data: data read from sensor, read done flag and unit changes button-press
     data_sensor       : in std_logic_vector(8 downto 0);
     read_done         : in std_logic;
-    toggle_conv_units : in std_logic;
+    toggle_units      : in std_logic;
     
     -- outputs: binary temperature and units
     temperature_bin : buffer std_logic_vector(8 downto 0);
     temperature_sgn : buffer std_logic;
-    conv_units      : buffer std_logic_vector(1 downto 0)        
+    temp_units      : buffer t_unit
   );
 end entity;
 
@@ -38,11 +43,6 @@ architecture rtl of temp_conversion is
   -- channel selector output
   signal temperature_2c        : std_logic_vector(9 downto 0);
   
-  
-  -- DUDA 2:
-  -- type units_t is (celsius, kelvin, fahrenheit);
-  -- ENTITY: conv_units : buffer units_t;
-  
 begin
   
   -- Conversion units state machine
@@ -50,17 +50,17 @@ begin
   process(clk, nRst)
   begin
     if nRst = '0' then
-      conv_units <= "00";
+      temp_units <= celsius;
     elsif clk'event and clk = '1' then
       
-      if toggle_conv_units = '1' then
-        case conv_units is
-          when "00" =>
-            conv_units <= "01";
-          when "01" =>
-            conv_units <= "10";
+      if toggle_units = '1' then
+        case temp_units is
+          when celsius =>
+            temp_units <= kelvin;
+          when kelvin =>
+            temp_units <= fahrenheit;
           when others =>
-            conv_units <= "00";
+            temp_units <= celsius;
         end case;
       end if;
       
@@ -101,8 +101,8 @@ begin
   
   
   -- Units channel selector (mux)
-  temperature_2c <= temp_kelvin_2c                        when conv_units = "01" else
-                    temp_fahrenheit_2c                    when conv_units = "10" else
+  temperature_2c <= temp_kelvin_2c                        when temp_units = kelvin else
+                    temp_fahrenheit_2c                    when temp_units = fahrenheit else
                     temp_celsius_2c(8) & temp_celsius_2c;
                  
                 

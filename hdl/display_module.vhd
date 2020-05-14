@@ -2,13 +2,16 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity presentacion_temperatura is
+use work.pack_temp_conv.all;
+
+
+entity display_module is
 port(clk:      in     std_logic;
      nRst:     in     std_logic;
 
      tic:      in     std_logic;
      
-     escala:   in    std_logic_vector(1 downto 0);
+     temp_units:   in    t_unit;
 
      sgn:      in     std_logic;
      mod_BCD:  in     std_logic_vector(11 downto 0); 
@@ -19,7 +22,9 @@ port(clk:      in     std_logic;
 
 end entity;
 
-architecture rtl of presentacion_temperatura is
+
+
+architecture rtl of display_module is
   signal cero_c:    std_logic;
   signal cero_d:    std_logic;
   signal pos_sgn_d: std_logic;
@@ -63,9 +68,9 @@ begin
                   '0';
 
   -- Mux decodificador BCD-7seg
-  BCD <= symb_grados_C         when escala = 1 and mux_disp = 30  else
-         symb_grados_k         when escala = 2 and mux_disp = 30  else
-         symb_grados_f         when escala = 3 and mux_disp = 30  else
+  BCD <= symb_grados_C         when temp_units = celsius    and mux_disp = 30  else
+         symb_grados_k         when temp_units = kelvin     and mux_disp = 30  else
+         symb_grados_f         when temp_units = fahrenheit and mux_disp = 30  else
 
          mod_BCD(3 downto 0)   when                mux_disp = 27  else
 

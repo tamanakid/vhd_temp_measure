@@ -1,9 +1,3 @@
--- Test que genera, en 191 accesos a la interfaz SPI, la secuencia de datos de temperatura:
--- de 0 a +150 seguida de -40 a -1
- 
--- Reloj 50 MHz
--- Es necesario completar la sentencia de emplazamiento del dut
--- El esclavo SPI funciona durante 191 accesos barriendo todas las posibles temperaturas y finalmente el mismo detiene el test
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -12,12 +6,13 @@ use ieee.std_logic_unsigned.all;
 
 
 
-entity test_interfaz_spi is
+entity test_temp_conv is
 end entity;
 
 
 
-architecture test of test_interfaz_spi is
+architecture test of test_temp_conv is
+  
   signal clk          : std_logic;
   signal nRst         : std_logic;
   signal pulse_units  : std_logic;
@@ -27,13 +22,15 @@ architecture test of test_interfaz_spi is
   signal spi_SI       : std_logic;
   signal disp_mux     : std_logic_vector(4 downto 0);
   signal disp_seg     : std_logic_vector(6 downto 0);
+  
 
-  constant T_clk: time := 20 ns;      
-
-
+  constant T_clk: time := 20 ns;
+  
+  
+  
 begin
-
-  -- ASSIGNMENT DECLARATION
+  
+  -- ASSIGNMENT DECLARATIONS
 
   dut_medt: entity work.metd(struct)
     generic map(
@@ -63,9 +60,9 @@ begin
       Tclk => T_clk,
       SDAT => spi_SI
     );
-    
-    
 
+
+  
   -- SIMULATION PROCESSES
 
   -- clk process
@@ -81,9 +78,11 @@ begin
   -- Stimuli process
   process
   begin
+    nRst <= '0';
+    pulse_units <= '0';
+    pulse_timing <= '0';
     
     -- Asynchronous enable
-    nRst <= '0';
     wait until clk'event and clk = '1';
     nRst <= '1';
     wait until clk'event and clk = '1';
@@ -92,17 +91,49 @@ begin
     wait until clk'event and clk = '1';
     nRst <= '1';
     
+    
     -- Synchronous test
-    -- No need for further stimuli: spi_slave performs the rest of the simulation
+    
+    
+    -- Test temperature conversion
+    
+    for i in 1 to 191 loop
+      
+      -- wait for data reading to complete
+      wait until spi_nCS'event and spi_nCS = '0';
+      wait until spi_nCS'event and spi_nCS = '1';
+      wait until clk'event and clk = '1';
+      
+      -- measure in celsius
+      wait until clk'event and clk = '1';
+      
+      -- measure in kelvin
+      pulse_units <= '1';
+      wait for 10*T_clk;
+      wait until clk'event and clk = '1';
+      pulse_units <= '0';
+      wait until clk'event and clk = '1';
+      
+      -- measure in fahrenheit
+      pulse_units <= '1';
+      wait for 10*T_clk;
+      wait until clk'event and clk = '1';
+      pulse_units <= '0';
+      wait until clk'event and clk = '1';
+      
+      -- back to celsius
+      pulse_units <= '1';
+      wait for 10*T_clk;
+      wait until clk'event and clk = '1';
+      pulse_units <= '0';
+      wait until clk'event and clk = '1';
+      
+    end loop;
+    
+    
     
     wait;
 
   end process;
-
-end test;
-
-
-
-
-
   
+end test;

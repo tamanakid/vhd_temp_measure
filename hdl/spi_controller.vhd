@@ -16,6 +16,9 @@ entity spi_controller is
     nRst  : in std_logic;
     clk   : in std_logic;
     
+    -- timing configuration toggle signal
+    toggle_timing   : in std_logic;
+    
     -- Timing signals from spi_timer
     timer_ena_nCS   : in std_logic;
     spi_SC_up       : in std_logic;
@@ -41,6 +44,8 @@ architecture rtl of spi_controller is
   
   type t_state is (off, power_up, ready, comm, wait_tristate);
   signal state            : t_state;
+  
+  signal read_interval    : std_logic_vector(3 downto 0);
   
   signal read_bit_count   : std_logic_vector(4 downto 0); -- counts up to the 9 bits to be read.
   signal wait_2sec_count  : std_logic_vector(1 downto 0); -- counts up to 12 seconds of waiting time before another read.
@@ -80,6 +85,26 @@ begin
           end if;
 
       end case;
+    end if;
+  end process;
+  
+  
+  
+  -- Counter: handle toggle_timing' signal to configure reading interval (Default value: 4 seconds)
+  process(clk, nRst)
+  begin
+    if nRst = '0' then
+      read_interval <= "0100";
+    elsif clk'event and clk = '1' then
+      
+      if toggle_timing = '1' then
+        if read_interval = "1100" then
+          read_interval <= "0100";
+        else
+          read_interval <= read_interval + 2;
+        end if;
+      end if;
+      
     end if;
   end process;
   
@@ -128,7 +153,7 @@ begin
   read_done <= '1' when read_bit_count = BITS_READ and spi_SC_down = '1'
                    else '0';
   
-  wait_done <= '1' when ((wait_2sec_count & '0') >= TIMER_READ_INTERVAL) and timer_2sec_eoc = '1'
+  wait_done <= '1' when ((wait_2sec_count & '0') >= read_interval) and timer_2sec_eoc = '1'
                    else '0';
   
 

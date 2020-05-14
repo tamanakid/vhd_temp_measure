@@ -7,6 +7,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
+use work.pack_temp_conv.all;
 
 
 
@@ -23,15 +24,22 @@ entity metd is
   
   
   port(
-    clk       : in      std_logic;
-    nRst      : in      std_logic;
+    -- global synchronization signals
+    clk           : in      std_logic;
+    nRst          : in      std_logic;
     
-    spi_SI    : in      std_logic;
-    spi_SC    : buffer  std_logic;
-    spi_nCS   : buffer  std_logic
+    -- configuration buttons inputs
+    pulse_units   : in      std_logic;
+    pulse_timing  : in      std_logic;
     
-    -- mux_disp  : buffer  std_logic_vector(4 downto 0);
-    -- seg       : buffer  std_logic_vector(6 downto 0)
+    -- sensor communication signals
+    spi_SI        : in      std_logic;
+    spi_SC        : buffer  std_logic;
+    spi_nCS       : buffer  std_logic;
+    
+    -- display module signals
+    disp_mux      : buffer  std_logic_vector(4 downto 0);
+    disp_seg      : buffer  std_logic_vector(6 downto 0)
   );
 end entity;
 
@@ -39,18 +47,31 @@ end entity;
 
 architecture struct of metd is
   
-  signal ena_rd           : std_logic;
-  signal read_done        : std_logic;
-  signal timer_ena_nCS    : std_logic;
-  signal spi_SC_up        : std_logic;
-  signal spi_SC_down      : std_logic;
-  signal spi_SI_read      : std_logic;
-  signal timer_2ms5_eoc   : std_logic;
-  signal timer_2sec_eoc   : std_logic;
-  signal data_sensor      : std_logic_vector(8 downto 0);
+  -- SPI communication related signals
+  signal ena_rd             : std_logic;
+  signal read_done          : std_logic;
+  signal timer_ena_nCS      : std_logic;
+  signal spi_SC_up          : std_logic;
+  signal spi_SC_down        : std_logic;
+  signal spi_SI_read        : std_logic;
+  signal timer_2ms5_eoc     : std_logic;
+  signal timer_2sec_eoc     : std_logic;
+  signal data_sensor        : std_logic_vector(8 downto 0);
+  
+  -- pulse filter related signals
+  signal toggle_units       : std_logic;
+  signal toggle_timing      : std_logic;
+  
+  -- Conversion related signals
+  signal temperature_bin    : std_logic_vector(8 downto 0);
+  signal temperature_sgn    : std_logic;
+  signal temp_units         : t_unit;
+  signal temperature_bcd    : std_logic_vector(11 downto 0);
   
   
 begin
+  
+  -- Timer interface
   
   timer: entity work.timer(rtl)
   generic map(
@@ -72,8 +93,25 @@ begin
     spi_SC          => spi_SC,
     spi_nCS         => spi_nCS
   );
+  
+  
+  
+  -- Pulses filter
+  
+  pulses_filter: entity work.pulses_filter(rtl)
+  port map(
+    clk             => clk,
+    nRst            => nRst,
+    pulse_units     => pulse_units,
+    pulse_timing    => pulse_timing,
+    toggle_units    => toggle_units,
+    toggle_timing   => toggle_timing
+  );
+  
 
-    
+  
+  
+  -- SPI input register
   
   spi_input_reg: entity work.spi_input_reg(rtl)
   port map(
@@ -87,12 +125,15 @@ begin
   
 
 
+  -- SPI controller module
+
   spi_controller: entity work.spi_controller(rtl)
   port map(
     clk             => clk,
     nRst            => nRst,
     ena_rd          => ena_rd,
     read_done       => read_done,
+    toggle_timing   => toggle_timing,
     timer_ena_nCS   => timer_ena_nCS,
     spi_SC_up       => spi_SC_up,
     spi_SC_down     => spi_SC_down,
@@ -100,5 +141,49 @@ begin
     timer_2ms5_eoc  => timer_2ms5_eoc,
     timer_2sec_eoc  => timer_2sec_eoc
   );
+  
+  
+  
+  -- Conversion module: 2C to binary
+  
+  temp_conversion: entity work.temp_conversion(rtl)
+  port map(
+    clk               => clk,
+    nRst              => nRst,
+    data_sensor       => data_sensor,
+    read_done         => read_done,
+    toggle_units      => toggle_units,
+    temperature_bin   => temperature_bin,
+    temperature_sgn   => temperature_sgn,
+    temp_units        => temp_units
+  );
+  
+  
+  
+  
+  -- Conversion module: binary to BCD
+  
+  temp_binary_to_bcd: entity work.temp_binary_to_bcd(rtl)
+  port map(
+    temperature_bin   => temperature_bin,
+    temperature_bcd   => temperature_bcd
+  );
+  
+  
+  
+  -- Display module output
+  
+  display_module: entity work.display_module(rtl)
+  port map(
+    clk         => clk,
+    nRst        => nRst,
+    tic         => timer_2ms5_eoc,
+    temp_units  => temp_units,
+    sgn         => temperature_sgn,
+    mod_BCD     => temperature_bcd,
+    mux_disp    => disp_mux,
+    seg         => disp_seg
+  );
+  
   
 end struct;

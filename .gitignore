@@ -3,3 +3,4 @@ modelsim/work
 modelsim/hito1.cr.mti
 modelsim/hito1.mpf
 modelsim/vsim.wlf
+*.bak
