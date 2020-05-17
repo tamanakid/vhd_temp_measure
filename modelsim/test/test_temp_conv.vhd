@@ -97,36 +97,49 @@ begin
     
     -- Test temperature conversion
     
-    for i in 1 to 191 loop
+    for i in 1 to 38 loop
       
-      -- wait for data reading to complete
-      wait until spi_nCS'event and spi_nCS = '0';
-      wait until spi_nCS'event and spi_nCS = '1';
+      for j in 1 to 5 loop
+        -- wait for data reading to complete
+        wait until spi_nCS'event and spi_nCS = '0';
+        wait until spi_nCS'event and spi_nCS = '1';
+        wait until clk'event and clk = '1';
+      
+        -- measure in celsius
+        wait until clk'event and clk = '1';
+      
+        -- measure in kelvin
+        pulse_units <= '1';
+        wait until clk'event and clk = '1';
+        pulse_units <= '0';
+        wait until clk'event and clk = '1';
+        wait until clk'event and clk = '1';
+      
+        -- measure in fahrenheit
+        pulse_units <= '1';
+        wait for 10*T_clk;
+        wait until clk'event and clk = '1';
+        pulse_units <= '0';
+        wait until clk'event and clk = '1';
+        wait until clk'event and clk = '1';
+      
+        -- back to celsius
+        pulse_units <= '1';
+        wait for 6*T_clk;
+        wait until clk'event and clk = '1';
+        pulse_units <= '0';
+        wait until clk'event and clk = '1';
+        wait until clk'event and clk = '1';
+      end loop;
+      
+      -- Change sampling time every 5 samples
+      wait until clk'event and clk = '1';
+      pulse_timing <= '1';
+      wait for 3*T_clk;
+      wait until clk'event and clk = '1';
+      pulse_timing <= '0';
       wait until clk'event and clk = '1';
       
-      -- measure in celsius
-      wait until clk'event and clk = '1';
-      
-      -- measure in kelvin
-      pulse_units <= '1';
-      wait for 10*T_clk;
-      wait until clk'event and clk = '1';
-      pulse_units <= '0';
-      wait until clk'event and clk = '1';
-      
-      -- measure in fahrenheit
-      pulse_units <= '1';
-      wait for 10*T_clk;
-      wait until clk'event and clk = '1';
-      pulse_units <= '0';
-      wait until clk'event and clk = '1';
-      
-      -- back to celsius
-      pulse_units <= '1';
-      wait for 10*T_clk;
-      wait until clk'event and clk = '1';
-      pulse_units <= '0';
-      wait until clk'event and clk = '1';
       
     end loop;
     

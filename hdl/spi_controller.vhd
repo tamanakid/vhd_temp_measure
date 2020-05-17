@@ -48,7 +48,7 @@ architecture rtl of spi_controller is
   signal read_interval    : std_logic_vector(3 downto 0);
   
   signal read_bit_count   : std_logic_vector(4 downto 0); -- counts up to the 9 bits to be read.
-  signal wait_2sec_count  : std_logic_vector(1 downto 0); -- counts up to 12 seconds of waiting time before another read.
+  signal wait_2sec_count  : std_logic_vector(2 downto 0); -- counts up to 12 seconds of waiting time before another read (each count = 2 secs)
   signal wait_done        : std_logic;
 
 begin
