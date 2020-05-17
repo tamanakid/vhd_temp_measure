@@ -25,6 +25,9 @@ architecture test of test_temp_conv is
   
 
   constant T_clk: time := 20 ns;
+  constant time_spi_period : natural := 20;
+  constant time_2ms5_period : natural := 5;
+  constant time_2sec_period : natural := 25;
   
   
   
@@ -34,10 +37,10 @@ begin
 
   dut_medt: entity work.metd(struct)
     generic map(
-      TIME_SPI_PERIOD   => 20,     -- 400 ns signal length
-      TIME_2MS5_PERIOD  => 25,     -- 2.5 ms signal length (simulation: 10 us)
-      TIME_2SEC_PERIOD  => 5,      --  2 sec signal length (simulation: 50 us)
-      TIME_SPI_ENA_NCS  => 2       -- ena_nCS generated at 300 ms (simulation: 20 us)
+      TIME_SPI_PERIOD   => time_spi_period,     -- 400 ns signal length
+      TIME_2MS5_PERIOD  => time_2ms5_period,    -- 2.5 ms signal length (simulation: 2 us)
+      TIME_2SEC_PERIOD  => time_2sec_period,    --  2 sec signal length (simulation: 50 us)
+      TIME_SPI_ENA_NCS  => 2                    -- ena_nCS generated at 300 ms (simulation: 4 us)
     )
     port map(
       clk           => clk,
@@ -106,13 +109,14 @@ begin
         wait until clk'event and clk = '1';
       
         -- measure in celsius
+        wait for (T_clk * time_spi_period * (time_2ms5_period * 5));
         wait until clk'event and clk = '1';
       
         -- measure in kelvin
         pulse_units <= '1';
         wait until clk'event and clk = '1';
         pulse_units <= '0';
-        wait until clk'event and clk = '1';
+        wait for (T_clk * time_spi_period * (time_2ms5_period * 5));
         wait until clk'event and clk = '1';
       
         -- measure in fahrenheit
@@ -120,7 +124,7 @@ begin
         wait for 10*T_clk;
         wait until clk'event and clk = '1';
         pulse_units <= '0';
-        wait until clk'event and clk = '1';
+        wait for (T_clk * time_spi_period * (time_2ms5_period * 5));
         wait until clk'event and clk = '1';
       
         -- back to celsius
@@ -128,7 +132,7 @@ begin
         wait for 6*T_clk;
         wait until clk'event and clk = '1';
         pulse_units <= '0';
-        wait until clk'event and clk = '1';
+        wait for (T_clk * time_spi_period * (time_2ms5_period * 5));
         wait until clk'event and clk = '1';
       end loop;
       
