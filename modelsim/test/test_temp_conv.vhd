@@ -13,15 +13,17 @@ end entity;
 
 architecture test of test_temp_conv is
   
-  signal clk          : std_logic;
-  signal nRst         : std_logic;
-  signal pulse_units  : std_logic;
-  signal pulse_timing : std_logic;
-  signal spi_nCS      : std_logic;
-  signal spi_SC       : std_logic;
-  signal spi_SI       : std_logic;
-  signal disp_mux     : std_logic_vector(4 downto 0);
-  signal disp_seg     : std_logic_vector(6 downto 0);
+  signal clk              : std_logic;
+  signal nRst             : std_logic;
+  signal pulse_units      : std_logic;
+  signal pulse_timing     : std_logic;
+  signal spi_nCS          : std_logic;
+  signal spi_SC           : std_logic;
+  signal spi_SI           : std_logic;
+  signal temperature_bcd  : std_logic_vector(11 downto 0);
+  signal temperature_sgn  : std_logic;
+  signal disp_mux         : std_logic_vector(4 downto 0);
+  signal disp_seg         : std_logic_vector(6 downto 0);
   
 
   constant T_clk: time := 20 ns;
@@ -43,15 +45,17 @@ begin
       TIME_SPI_ENA_NCS  => 2                    -- ena_nCS generated at 300 ms (simulation: 4 us)
     )
     port map(
-      clk           => clk,
-      nRst          => nRst,
-      pulse_units   => pulse_units,
-      pulse_timing  => pulse_timing,
-      spi_nCS       => spi_nCS,
-      spi_SC        => spi_SC,
-      spi_SI        => spi_SI,
-      disp_mux      => disp_mux,
-      disp_seg      => disp_seg
+      clk             => clk,
+      nRst            => nRst,
+      pulse_units     => pulse_units,
+      pulse_timing    => pulse_timing,
+      spi_nCS         => spi_nCS,
+      spi_SC          => spi_SC,
+      spi_SI          => spi_SI,
+      temperature_bcd => temperature_bcd,
+      temperature_sgn => temperature_sgn,
+      disp_mux        => disp_mux,
+      disp_seg        => disp_seg
     );
             
 
@@ -64,6 +68,21 @@ begin
       SDAT => spi_SI
     );
 
+
+  autoverificacion_temp_conv: entity work.monitor_temp_conv(test)
+    port map(
+      clk             => clk,
+      nRst            => nRst,
+      pulse_units     => pulse_units,
+      pulse_timing    => pulse_timing,
+      spi_nCS         => spi_nCS,
+      spi_SC          => spi_SC,
+      spi_SI          => spi_SI,
+      temperature_bcd => temperature_bcd,
+      temperature_sgn => temperature_sgn,
+      disp_mux        => disp_mux,
+      disp_seg        => disp_seg
+    );
 
   
   -- SIMULATION PROCESSES

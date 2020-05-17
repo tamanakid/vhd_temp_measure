@@ -37,9 +37,13 @@ entity metd is
     spi_SC        : buffer  std_logic;
     spi_nCS       : buffer  std_logic;
     
+    -- temperature output signals
+    temperature_bcd : buffer  std_logic_vector(11 downto 0);
+    temperature_sgn : buffer  std_logic;
+    
     -- display module signals
-    disp_mux      : buffer  std_logic_vector(4 downto 0);
-    disp_seg      : buffer  std_logic_vector(6 downto 0)
+    disp_mux        : buffer  std_logic_vector(4 downto 0);
+    disp_seg        : buffer  std_logic_vector(6 downto 0)
   );
 end entity;
 
@@ -64,9 +68,7 @@ architecture struct of metd is
   
   -- Conversion related signals
   signal temperature_bin    : std_logic_vector(8 downto 0);
-  signal temperature_sgn    : std_logic;
   signal temp_units         : t_unit;
-  signal temperature_bcd    : std_logic_vector(11 downto 0);
   
   
 begin

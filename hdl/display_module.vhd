@@ -75,11 +75,11 @@ begin
          mod_BCD(3 downto 0)   when                mux_disp = 27  else
 
          mod_BCD(7 downto 4)   when cero_d    = '0' and mux_disp = 23  else
-         symb_apagado          when cero_d    = '1' and mux_disp = 23  else
+         -- symb_apagado          when cero_d    = '1' and mux_disp = 23  else
          symb_menos            when pos_sgn_d = '1' and mux_disp = 23  else
 
          mod_BCD(11 downto 8)  when cero_c    = '0' and mux_disp = 15 else
-         symb_apagado          when cero_c    = '1' and mux_disp = 15 else
+         -- symb_apagado          when cero_c    = '1' and mux_disp = 15 else
          symb_menos            when pos_sgn_c = '1' and mux_disp = 15 else
 
          symb_apagado;
