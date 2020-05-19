@@ -1,4 +1,13 @@
-quartus/
+quartus/METD.qws
+quartus/db
+quartus/incremental_db
+quartus/output_files
+
+quartus_demo/METD.qws
+quartus_demo/db
+quartus_demo/incremental_db
+quartus_demo/output_files
+
 modelsim/work
 modelsim/hito1.cr.mti
 modelsim/hito1.mpf
