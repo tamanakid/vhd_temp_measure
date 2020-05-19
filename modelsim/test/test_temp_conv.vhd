@@ -52,8 +52,6 @@ begin
       spi_nCS         => spi_nCS,
       spi_SC          => spi_SC,
       spi_SI          => spi_SI,
-      temperature_bcd => temperature_bcd,
-      temperature_sgn => temperature_sgn,
       disp_mux        => disp_mux,
       disp_seg        => disp_seg
     );
@@ -68,21 +66,21 @@ begin
       SDAT => spi_SI
     );
 
-
-  autoverificacion_temp_conv: entity work.monitor_temp_conv(test)
-    port map(
-      clk             => clk,
-      nRst            => nRst,
-      pulse_units     => pulse_units,
-      pulse_timing    => pulse_timing,
-      spi_nCS         => spi_nCS,
-      spi_SC          => spi_SC,
-      spi_SI          => spi_SI,
-      temperature_bcd => temperature_bcd,
-      temperature_sgn => temperature_sgn,
-      disp_mux        => disp_mux,
-      disp_seg        => disp_seg
-    );
+  
+--  autoverificacion_temp_conv: entity work.monitor_temp_conv(test)
+--    port map(
+--      clk             => clk,
+--      nRst            => nRst,
+--      pulse_units     => pulse_units,
+--      pulse_timing    => pulse_timing,
+--      spi_nCS         => spi_nCS,
+--      spi_SC          => spi_SC,
+--      spi_SI          => spi_SI,
+--      temperature_bcd => temperature_bcd,
+--      temperature_sgn => temperature_sgn,
+--      disp_mux        => disp_mux,
+--      disp_seg        => disp_seg
+--    );
 
   
   -- SIMULATION PROCESSES
@@ -101,8 +99,8 @@ begin
   process
   begin
     nRst <= '0';
-    pulse_units <= '0';
-    pulse_timing <= '0';
+    pulse_units <= '1';
+    pulse_timing <= '1';
     
     -- Asynchronous enable
     wait until clk'event and clk = '1';
@@ -132,35 +130,35 @@ begin
         wait until clk'event and clk = '1';
       
         -- measure in kelvin
-        pulse_units <= '1';
-        wait until clk'event and clk = '1';
         pulse_units <= '0';
+        wait until clk'event and clk = '1';
+        pulse_units <= '1';
         wait for (T_clk * time_spi_period * (time_2ms5_period * 5));
         wait until clk'event and clk = '1';
       
         -- measure in fahrenheit
-        pulse_units <= '1';
+        pulse_units <= '0';
         wait for 10*T_clk;
         wait until clk'event and clk = '1';
-        pulse_units <= '0';
+        pulse_units <= '1';
         wait for (T_clk * time_spi_period * (time_2ms5_period * 5));
         wait until clk'event and clk = '1';
       
         -- back to celsius
-        pulse_units <= '1';
+        pulse_units <= '0';
         wait for 6*T_clk;
         wait until clk'event and clk = '1';
-        pulse_units <= '0';
+        pulse_units <= '1';
         wait for (T_clk * time_spi_period * (time_2ms5_period * 5));
         wait until clk'event and clk = '1';
       end loop;
       
       -- Change sampling time every 5 samples
       wait until clk'event and clk = '1';
-      pulse_timing <= '1';
+      pulse_timing <= '0';
       wait for 3*T_clk;
       wait until clk'event and clk = '1';
-      pulse_timing <= '0';
+      pulse_timing <= '1';
       wait until clk'event and clk = '1';
       
       

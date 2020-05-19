@@ -28,53 +28,35 @@ end entity;
 
 architecture rtl of pulses_filter is
   
-  signal units_on   : std_logic;
-  signal timing_on  : std_logic;
+  -- flip-flop arrays for input synchronization and metastability (MS) prevention
+  signal units_sync     : std_logic_vector(4 downto 0);
+  signal timing_sync    : std_logic_vector(4 downto 0);
   
 begin
   
-  -- pulse: temperature units (celsius, kelvin, fahrenheit)
+  -- input synchronization and MS prevention (For each pulse: 4 ff for MS filtering + 1 ff for pulse state monitoring)
+  -- NOTE: pulse inputs are '0' when on, '1' when off
   process(clk, nRst)
   begin
     if nRst = '0' then
-      toggle_units <= '0';
-      units_on <= '0';
+      units_sync <= (others => '1');
+      timing_sync <= (others => '1');
+
     elsif clk'event and clk = '1' then
-      
-      if pulse_units = '1' and units_on = '0' then
-        toggle_units <= '1';
-        units_on <= '1';
-      elsif units_on = '1' and pulse_units = '0' then
-        toggle_units <= '0';
-        units_on <= '0';
-      else
-        toggle_units <= '0';
-      end if;
+      units_sync <= units_sync(3 downto 0) & pulse_units;
+      timing_sync <= timing_sync(3 downto 0) & pulse_timing;
       
     end if;
   end process;
+
+
+  -- Filtered pulses outputs are '1' when on, '0' when off.
   
+  -- filtered pulse: temperature units (celsius, kelvin, fahrenheit)
+  toggle_units <= '1' when units_sync(4) = '1' and units_sync(3) = '0' else '0';
   
-  -- pulse: sampling interval (4, 6, 8, 10, 12 seconds)
-  process(clk, nRst)
-  begin
-    if nRst = '0' then
-      toggle_timing <= '0';
-      timing_on <= '0';
-    elsif clk'event and clk = '1' then
-      
-      if pulse_timing = '1' and timing_on = '0' then
-        toggle_timing <= '1';
-        timing_on <= '1';
-      elsif timing_on = '1' and pulse_timing = '0' then
-        toggle_timing <= '0';
-        timing_on <= '0';
-      else
-        toggle_timing <= '0';
-      end if;
-      
-    end if;
-  end process;
+  -- filtered pulse: sampling interval (4-12 seconds)
+  toggle_timing <= '1' when timing_sync(4) = '1' and timing_sync(3) = '0' else '0';
   
 
 end rtl;

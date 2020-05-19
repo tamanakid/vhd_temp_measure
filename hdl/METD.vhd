@@ -37,10 +37,6 @@ entity metd is
     spi_SC        : buffer  std_logic;
     spi_nCS       : buffer  std_logic;
     
-    -- temperature output signals
-    temperature_bcd : buffer  std_logic_vector(11 downto 0);
-    temperature_sgn : buffer  std_logic;
-    
     -- display module signals
     disp_mux        : buffer  std_logic_vector(4 downto 0);
     disp_seg        : buffer  std_logic_vector(6 downto 0)
@@ -59,7 +55,7 @@ architecture struct of metd is
   signal spi_SC_down        : std_logic;
   signal spi_SI_read        : std_logic;
   signal timer_2ms5_eoc     : std_logic;
-  signal timer_2sec_eoc     : std_logic;
+  signal timer_wait_done    : std_logic;
   signal data_sensor        : std_logic_vector(8 downto 0);
   
   -- pulse filter related signals
@@ -69,6 +65,10 @@ architecture struct of metd is
   -- Conversion related signals
   signal temperature_bin    : std_logic_vector(8 downto 0);
   signal temp_units         : t_unit;
+  
+  -- BCD temperature
+  signal temperature_bcd : std_logic_vector(11 downto 0);
+  signal temperature_sgn : std_logic;
   
   
 begin
@@ -86,12 +86,13 @@ begin
     clk             => clk,
     nRst            => nRst,
     ena_rd          => ena_rd,
+    toggle_timing   => toggle_timing,
     timer_ena_nCS   => timer_ena_nCS,
     spi_SC_up       => spi_SC_up,
     spi_SC_down     => spi_SC_down,
     spi_SI_read     => spi_SI_read,
     timer_2ms5_eoc  => timer_2ms5_eoc,
-    timer_2sec_eoc  => timer_2sec_eoc,
+    timer_wait_done => timer_wait_done,
     spi_SC          => spi_SC,
     spi_nCS         => spi_nCS
   );
@@ -135,13 +136,12 @@ begin
     nRst            => nRst,
     ena_rd          => ena_rd,
     read_done       => read_done,
-    toggle_timing   => toggle_timing,
     timer_ena_nCS   => timer_ena_nCS,
     spi_SC_up       => spi_SC_up,
     spi_SC_down     => spi_SC_down,
     spi_SI_read     => spi_SI_read,
     timer_2ms5_eoc  => timer_2ms5_eoc,
-    timer_2sec_eoc  => timer_2sec_eoc
+    timer_wait_done => timer_wait_done
   );
   
   

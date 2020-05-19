@@ -30,13 +30,16 @@ entity timer is
     -- Control signals from spi_controller
     ena_rd  : in std_logic;
     
-    -- Timing signals to spi_controller
+    -- timing configuration toggle signal from pulses_filter
+    toggle_timing   : in std_logic;
+    
+    -- Timing signals to other modules
     timer_ena_nCS   : buffer std_logic;
     spi_SC_up       : buffer std_logic;
     spi_SC_down     : buffer std_logic;
     spi_SI_read     : buffer std_logic;
     timer_2ms5_eoc  : buffer std_logic;
-    timer_2sec_eoc  : buffer std_logic;
+    timer_wait_done : buffer std_logic;
     
     -- SPI clock and chip select generation
     spi_SC  : buffer std_logic;
@@ -63,11 +66,16 @@ architecture rtl of timer is
   constant TIME_SPI_SC_LO     : natural := 20;    -- 200 ns pulse length
   
   
-  -- internal signals
-  signal timer_spi        : std_logic_vector(4 downto 0);     -- base 20 counter (400 ns)
-  signal timer_spi_eoc    : std_logic;
-  signal timer_2ms5       : std_logic_vector(12 downto 0);    -- base 6250 counter (2.5 ms)
-  signal timer_2sec       : std_logic_vector(9 downto 0);     -- base 800 counter (2 sec)
+  -- counters signals
+  signal timer_spi            : std_logic_vector(4 downto 0);     -- base 20 counter (400 ns)
+  signal timer_spi_eoc        : std_logic;
+  signal timer_2ms5           : std_logic_vector(12 downto 0);    -- base 6250 counter (2.5 ms)
+  signal timer_2sec           : std_logic_vector(9 downto 0);     -- base 800 counter (2 sec)
+  signal timer_2sec_eoc       : std_logic;
+  signal timer_rd_interval    : std_logic_vector(3 downto 0);
+  
+  -- reading interval state
+  signal read_interval        : std_logic_vector(3 downto 0);
   
   
 begin
@@ -98,6 +106,8 @@ begin
   spi_SC_up     <= '1' when timer_spi = TIME_SPI_SC_HI else '0';
   spi_SI_read   <= '1' when timer_spi = TIME_SPI_SI_RD else '0';
   spi_SC_down   <= '1' when timer_spi = TIME_SPI_SC_LO else '0';
+  
+  
   
   
   -- 2.5 ms timer (base 6250)
@@ -149,6 +159,51 @@ begin
   
   
   
+  -- Reading interval timer - 4-12 seconds (Base 2-6)
+  -- handle toggle_timing' signal to configure reading interval (Default value: 4 seconds)
+  process(nRst, clk)
+  begin
+    if nRst = '0' then
+      timer_rd_interval <= (0 => '1', others => '0');
+    elsif clk'event and clk = '1' then
+
+      if timer_wait_done = '1' then
+        timer_rd_interval <= (0 => '1', others => '0');
+      
+      elsif timer_2sec_eoc = '1' then
+        timer_rd_interval <= timer_rd_interval + 1;
+      
+      end if;      
+    end if;
+  end process;
+  
+  timer_wait_done <= '1' when ((timer_rd_interval & '0') >= read_interval) and timer_2sec_eoc = '1'
+                     else '0';
+  
+  
+  
+  
+  -- State machine counter for read interval
+  process(clk, nRst)
+  begin
+    if nRst = '0' then
+      read_interval <= "0100";
+    elsif clk'event and clk = '1' then
+      
+      if toggle_timing = '1' then
+        if read_interval = "1100" then
+          read_interval <= "0100";
+        else
+          read_interval <= read_interval + 2;
+        end if;
+      end if;
+      
+    end if;
+  end process;
+  
+  
+  
+  
   -- SC  and nCS Generation
   -- Buffered as to avoid glitches
   process(clk, nRst)
@@ -173,7 +228,6 @@ begin
 	   
     end if;
   end process;
-  
   
   
   

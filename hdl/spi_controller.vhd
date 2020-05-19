@@ -16,16 +16,13 @@ entity spi_controller is
     nRst  : in std_logic;
     clk   : in std_logic;
     
-    -- timing configuration toggle signal
-    toggle_timing   : in std_logic;
-    
     -- Timing signals from spi_timer
     timer_ena_nCS   : in std_logic;
     spi_SC_up       : in std_logic;
     spi_SC_down     : in std_logic;
     spi_SI_read     : in std_logic;
     timer_2ms5_eoc  : in std_logic;
-    timer_2sec_eoc  : in std_logic;
+    timer_wait_done : in std_logic;
     
     -- Control signals to spi_timer
     ena_rd    : buffer std_logic;
@@ -44,12 +41,9 @@ architecture rtl of spi_controller is
   
   type t_state is (off, power_up, ready, comm, wait_tristate);
   signal state            : t_state;
-  
-  signal read_interval    : std_logic_vector(3 downto 0);
-  
+
   signal read_bit_count   : std_logic_vector(4 downto 0); -- counts up to the 9 bits to be read.
-  signal wait_2sec_count  : std_logic_vector(2 downto 0); -- counts up to 12 seconds of waiting time before another read (each count = 2 secs)
-  signal wait_done        : std_logic;
+
 
 begin
   
@@ -90,26 +84,6 @@ begin
   
   
   
-  -- Counter: handle toggle_timing' signal to configure reading interval (Default value: 4 seconds)
-  process(clk, nRst)
-  begin
-    if nRst = '0' then
-      read_interval <= "0100";
-    elsif clk'event and clk = '1' then
-      
-      if toggle_timing = '1' then
-        if read_interval = "1100" then
-          read_interval <= "0100";
-        else
-          read_interval <= read_interval + 2;
-        end if;
-      end if;
-      
-    end if;
-  end process;
-  
-  
-  
   
   -- Handle 'ena_rd' signal used at spi_interface to enable reading operations
   process(clk, nRst)
@@ -117,7 +91,6 @@ begin
     if nRst = '0' then
       ena_rd <= '0';
       read_bit_count <= (others => '0');
-      wait_2sec_count <= (0 => '1', others => '0');
   
     elsif clk'event and clk = '1' then
       
@@ -138,12 +111,8 @@ begin
       
       -- ENABLING ena_rd: Start new read when required time interval transcurs (Default: 4 seconds - TIMER_READ_INTERVAL)
       elsif state = ready then
-        if wait_done = '1' then
-          wait_2sec_count <= (0 => '1', others => '0');
+        if timer_wait_done = '1' then
           ena_rd <= '1';
-          
-        elsif timer_2sec_eoc = '1' then
-          wait_2sec_count <= wait_2sec_count + 1;
         end if;
 
       end if;
@@ -151,10 +120,7 @@ begin
   end process;
   
   read_done <= '1' when read_bit_count = BITS_READ and spi_SC_down = '1'
-                   else '0';
-  
-  wait_done <= '1' when ((wait_2sec_count & '0') >= read_interval) and timer_2sec_eoc = '1'
-                   else '0';
+               else '0';
   
 
 end rtl;
