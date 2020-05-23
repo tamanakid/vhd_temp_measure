@@ -35,7 +35,6 @@ entity timer is
     
     -- Timing signals to other modules
     timer_ena_nCS   : buffer std_logic;
-    spi_SC_up       : buffer std_logic;
     spi_SC_down     : buffer std_logic;
     spi_SI_read     : buffer std_logic;
     timer_2ms5_eoc  : buffer std_logic;
@@ -65,6 +64,8 @@ architecture rtl of timer is
   constant TIME_SPI_SI_RD     : natural := 15;    -- 100 ns into SC_UP
   constant TIME_SPI_SC_LO     : natural := 20;    -- 200 ns pulse length
   
+  -- clock rise signal (Not needed outside the timer module)
+  signal spi_SC_up            : std_logic;
   
   -- counters signals
   signal timer_spi            : std_logic_vector(4 downto 0);     -- base 20 counter (400 ns)

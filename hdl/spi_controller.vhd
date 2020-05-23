@@ -18,10 +18,8 @@ entity spi_controller is
     
     -- Timing signals from spi_timer
     timer_ena_nCS   : in std_logic;
-    spi_SC_up       : in std_logic;
     spi_SC_down     : in std_logic;
     spi_SI_read     : in std_logic;
-    timer_2ms5_eoc  : in std_logic;
     timer_wait_done : in std_logic;
     
     -- Control signals to spi_timer

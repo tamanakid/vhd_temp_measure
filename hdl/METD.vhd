@@ -51,7 +51,6 @@ architecture struct of metd is
   signal ena_rd             : std_logic;
   signal read_done          : std_logic;
   signal timer_ena_nCS      : std_logic;
-  signal spi_SC_up          : std_logic;
   signal spi_SC_down        : std_logic;
   signal spi_SI_read        : std_logic;
   signal timer_2ms5_eoc     : std_logic;
@@ -88,7 +87,6 @@ begin
     ena_rd          => ena_rd,
     toggle_timing   => toggle_timing,
     timer_ena_nCS   => timer_ena_nCS,
-    spi_SC_up       => spi_SC_up,
     spi_SC_down     => spi_SC_down,
     spi_SI_read     => spi_SI_read,
     timer_2ms5_eoc  => timer_2ms5_eoc,
@@ -137,10 +135,8 @@ begin
     ena_rd          => ena_rd,
     read_done       => read_done,
     timer_ena_nCS   => timer_ena_nCS,
-    spi_SC_up       => spi_SC_up,
     spi_SC_down     => spi_SC_down,
     spi_SI_read     => spi_SI_read,
-    timer_2ms5_eoc  => timer_2ms5_eoc,
     timer_wait_done => timer_wait_done
   );
   
